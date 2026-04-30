@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <!-- Gera o arquivo XML de documentação usado pelo Swagger para exibir os comentários /// -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\BackEndAluguel.xml</DocumentationFile>
+        <!-- Suprime avisos de comentário XML: CS1591 (membro sem doc), CS1573 (param sem tag), CS1587 (comentário em posição inválida) -->
+        <NoWarn>$(NoWarn);1591;1573;1587</NoWarn>
+        <RootNamespace>BackEndAluguel.Api</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MediatR" Version="12.4.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
+        <!-- Swashbuckle: Swagger UI e documentação OpenAPI interativa -->
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\BackEndAluguel.Application\BackEndAluguel.Application.csproj" />
+      <ProjectReference Include="..\BackEndAluguel.Infrastructure\BackEndAluguel.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>
