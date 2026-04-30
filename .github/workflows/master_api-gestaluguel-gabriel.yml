@@ -26,7 +26,7 @@ jobs:
       # Removed 'dotnet build' step as 'dotnet publish' implicitly builds the project
 
       - name: dotnet publish
-        run: dotnet publish BackEndAluguel.Api/BackEndAluguel.Api.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish BackEndAluguel/BackEndAluguel.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
