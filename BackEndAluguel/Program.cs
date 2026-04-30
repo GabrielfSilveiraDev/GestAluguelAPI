@@ -111,15 +111,16 @@ builder.Services.AddSwaggerGen(opcoes =>
 });
 
 // CORS — permite que o front-end React acesse a API
-// Em produção substitua a política pelo domínio real do front-end
+// SUMMARY: Configures CORS to allow both local development and production frontend.
 builder.Services.AddCors(opcoes =>
 {
     opcoes.AddPolicy("PermitirFrontEnd", politica =>
         politica
             .WithOrigins(
-                "http://localhost:3000",   // React (Create React App / Vite padrão)
-                "http://localhost:5173",   // Vite alternativo
-                "http://localhost:4200"    // Angular (caso necessário)
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://gest-aluguel-front-end-9lin.vercel.app", // Sua URL principal
+                "https://gest-aluguel-front-end-9lin-2jzt75ho8.vercel.app" // URL de preview
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
