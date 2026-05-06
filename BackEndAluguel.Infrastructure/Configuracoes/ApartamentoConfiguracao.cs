@@ -45,6 +45,17 @@ public class ApartamentoConfiguracao : IEntityTypeConfiguration<Apartamento>
             .IsRequired()
             .HasDefaultValue(false);
 
+        // HostId — chave de isolamento multi-tenant
+        builder.Property(a => a.HostId)
+            .HasColumnName("HostId")
+            .IsRequired();
+
+        // FK para a tabela Hosts
+        builder.HasOne<BackEndAluguel.Domain.Entidades.Host>()
+            .WithMany()
+            .HasForeignKey(a => a.HostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Auditorias de data
         builder.Property(a => a.CriadoEm)
             .HasColumnName("CriadoEm")
@@ -54,10 +65,10 @@ public class ApartamentoConfiguracao : IEntityTypeConfiguration<Apartamento>
             .HasColumnName("AtualizadoEm")
             .IsRequired(false);
 
-        // Índice único: não pode existir dois apartamentos com mesmo número e bloco
-        builder.HasIndex(a => new { a.Numero, a.Bloco })
+        // Índice único: não pode existir dois apartamentos com mesmo número, bloco E host
+        builder.HasIndex(a => new { a.HostId, a.Numero, a.Bloco })
             .IsUnique()
-            .HasDatabaseName("IX_Apartamentos_Numero_Bloco");
+            .HasDatabaseName("IX_Apartamentos_HostId_Numero_Bloco");
 
         // =============================================================
         // RELACIONAMENTO: 1 Apartamento -> N Inquilinos
@@ -71,4 +82,3 @@ public class ApartamentoConfiguracao : IEntityTypeConfiguration<Apartamento>
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
-

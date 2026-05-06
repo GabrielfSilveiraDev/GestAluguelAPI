@@ -1,4 +1,5 @@
-﻿using BackEndAluguel.Application.Comum.Excecoes;
+﻿using BackEndAluguel.Application.Comum;
+using BackEndAluguel.Application.Comum.Excecoes;
 using BackEndAluguel.Application.Configuracoes.DTOs;
 using BackEndAluguel.Application.Faturas.Comandos;
 using BackEndAluguel.Application.Faturas.Consultas;
@@ -25,16 +26,18 @@ public class CriarFaturaManipulador : IRequestHandler<CriarFaturaComando, Fatura
     private readonly IFaturaRepositorio _faturaRepositorio;
     private readonly IInquilinoRepositorio _inquilinoRepositorio;
     private readonly IConfiguracaoRepositorio _configuracaoRepositorio;
+    private readonly ITenantContexto _tenantContexto;
 
-    /// <summary>Inicializa o manipulador com os repositorios necessarios.</summary>
     public CriarFaturaManipulador(
         IFaturaRepositorio faturaRepositorio,
         IInquilinoRepositorio inquilinoRepositorio,
-        IConfiguracaoRepositorio configuracaoRepositorio)
+        IConfiguracaoRepositorio configuracaoRepositorio,
+        ITenantContexto tenantContexto)
     {
         _faturaRepositorio = faturaRepositorio;
         _inquilinoRepositorio = inquilinoRepositorio;
         _configuracaoRepositorio = configuracaoRepositorio;
+        _tenantContexto = tenantContexto;
     }
 
     /// <summary>Processa a criacao da fatura com preenchimento automatico de kWh e valores de configuracao.</summary>
@@ -86,6 +89,8 @@ public class CriarFaturaManipulador : IRequestHandler<CriarFaturaComando, Fatura
         // Usa Garagem do inquilino se nao foi fornecido manualmente
         decimal valorGaragem = request.ValorGaragem ?? inquilino.Garagem;
 
+        var hostId = _tenantContexto.ObterHostId() ?? Guid.Empty;
+
         var fatura = new Fatura(
             request.MesReferencia,
             request.ValorAluguel,
@@ -97,7 +102,8 @@ public class CriarFaturaManipulador : IRequestHandler<CriarFaturaComando, Fatura
             request.KwAtual,
             kwhValor,
             request.CodigoPix,
-            valorGaragem);
+            valorGaragem,
+            hostId);
 
         await _faturaRepositorio.AdicionarAsync(fatura, cancellationToken);
         await _faturaRepositorio.SalvarAlteracoesAsync(cancellationToken);

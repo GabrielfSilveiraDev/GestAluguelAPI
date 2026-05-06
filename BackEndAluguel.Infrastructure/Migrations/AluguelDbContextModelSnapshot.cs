@@ -44,6 +44,10 @@ namespace BackEndAluguel.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("CriadoEm");
 
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("HostId");
+
                     b.Property<string>("Numero")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -58,9 +62,9 @@ namespace BackEndAluguel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Numero", "Bloco")
+                    b.HasIndex("HostId", "Numero", "Bloco")
                         .IsUnique()
-                        .HasDatabaseName("IX_Apartamentos_Numero_Bloco")
+                        .HasDatabaseName("IX_Apartamentos_HostId_Numero_Bloco")
                         .HasFilter("[Bloco] IS NOT NULL");
 
                     b.ToTable("Apartamentos", (string)null);
@@ -85,6 +89,10 @@ namespace BackEndAluguel.Infrastructure.Migrations
 
                     b.Property<DateTime>("CriadoEm")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("HostId");
 
                     b.Property<decimal>("KwhValor")
                         .HasPrecision(18, 4)
@@ -112,16 +120,11 @@ namespace BackEndAluguel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Configuracoes", (string)null);
+                    b.HasIndex("HostId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Configuracoes_HostId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
-                            CriadoEm = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            KwhValor = 0.0m,
-                            ValorAgua = 0.0m
-                        });
+                    b.ToTable("Configuracoes", (string)null);
                 });
 
             modelBuilder.Entity("BackEndAluguel.Domain.Entidades.ContratoInquilino", b =>
@@ -255,6 +258,9 @@ namespace BackEndAluguel.Infrastructure.Migrations
                     b.Property<DateOnly?>("DataPagamento")
                         .HasColumnType("date")
                         .HasColumnName("DataPagamento");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("InquilinoId")
                         .HasColumnType("uniqueidentifier")
@@ -474,6 +480,9 @@ namespace BackEndAluguel.Infrastructure.Migrations
                         .HasDefaultValue(0m)
                         .HasColumnName("Garagem");
 
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("NomeCompleto")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -516,6 +525,24 @@ namespace BackEndAluguel.Infrastructure.Migrations
                         .HasDatabaseName("IX_Inquilinos_Cpf");
 
                     b.ToTable("Inquilinos", (string)null);
+                });
+
+            modelBuilder.Entity("BackEndAluguel.Domain.Entidades.Apartamento", b =>
+                {
+                    b.HasOne("BackEndAluguel.Domain.Entidades.Host", null)
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BackEndAluguel.Domain.Entidades.Configuracao", b =>
+                {
+                    b.HasOne("BackEndAluguel.Domain.Entidades.Host", null)
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BackEndAluguel.Domain.Entidades.ContratoInquilino", b =>

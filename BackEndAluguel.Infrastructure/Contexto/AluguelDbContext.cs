@@ -1,5 +1,5 @@
-﻿using BackEndAluguel.Domain.Entidades;
-using BackEndAluguel.Infrastructure.Configuracoes;
+﻿using BackEndAluguel.Application.Comum;
+using BackEndAluguel.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackEndAluguel.Infrastructure.Contexto;
@@ -14,13 +14,21 @@ namespace BackEndAluguel.Infrastructure.Contexto;
 /// </summary>
 public class AluguelDbContext : DbContext
 {
+    private readonly ITenantContexto? _tenantContexto;
+
     /// <summary>
     /// Inicializa o contexto com as opções de configuração fornecidas via injeção de dependência.
     /// </summary>
-    /// <param name="opcoes">Opções de configuração do DbContext (connection string, provider, etc.).</param>
-    public AluguelDbContext(DbContextOptions<AluguelDbContext> opcoes) : base(opcoes)
+    public AluguelDbContext(DbContextOptions<AluguelDbContext> opcoes, ITenantContexto? tenantContexto = null)
+        : base(opcoes)
     {
+        _tenantContexto = tenantContexto;
     }
+
+    /// <summary>
+    /// Retorna o HostId do tenant atual, ou null se não houver contexto de tenant (ex: testes).
+    /// </summary>
+    private Guid? HostIdAtual => _tenantContexto?.ObterHostId();
 
     // =============================================================
     // DbSets — Representam as tabelas no banco de dados
@@ -85,14 +93,16 @@ public class AluguelDbContext : DbContext
         // definidas na assembly da infraestrutura (IEntityTypeConfiguration<T>)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AluguelDbContext).Assembly);
 
-        // Seed do registro singleton de Configuracao
-        modelBuilder.Entity<Configuracao>().HasData(new
-        {
-            Id = ConfiguracaoConfiguracao.ConfiguracaoId,
-            KwhValor = 0.0m,
-            ValorAgua = 0.0m,
-            CriadoEm = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            AtualizadoEm = (DateTime?)null
-        });
+        // Filtros globais de multi-tenancy — cada query retorna apenas os dados do host autenticado
+        modelBuilder.Entity<Apartamento>()
+            .HasQueryFilter(a => HostIdAtual == null || a.HostId == HostIdAtual);
+        modelBuilder.Entity<Inquilino>()
+            .HasQueryFilter(i => HostIdAtual == null || i.HostId == HostIdAtual);
+        modelBuilder.Entity<Fatura>()
+            .HasQueryFilter(f => HostIdAtual == null || f.HostId == HostIdAtual);
+        modelBuilder.Entity<Configuracao>()
+            .HasQueryFilter(c => HostIdAtual == null || c.HostId == HostIdAtual);
+        modelBuilder.Entity<GastoManutencao>()
+            .HasQueryFilter(g => HostIdAtual == null || g.Apartamento!.HostId == HostIdAtual);
     }
 }

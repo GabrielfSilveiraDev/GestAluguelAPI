@@ -20,6 +20,12 @@ public class Apartamento : EntidadeBase
     /// </summary>
     public bool Ocupado { get; private set; }
 
+    /// <summary>
+    /// Identificador do host (locador) dono deste apartamento.
+    /// Chave de isolamento multi-tenant — FK para a entidade Host.
+    /// </summary>
+    public Guid HostId { get; private set; }
+
     // =============================================================
     // RELACIONAMENTO: 1 Apartamento -> N Inquilinos
     // Um apartamento pode ser alugado por diversos inquilinos
@@ -49,12 +55,13 @@ public class Apartamento : EntidadeBase
     /// <param name="numero">Número do apartamento.</param>
     /// <param name="bloco">Bloco ou torre do apartamento. Opcional.</param>
     /// <exception cref="ArgumentException">Lançado quando número estiver vazio.</exception>
-    public Apartamento(string numero, string? bloco = null)
+    public Apartamento(string numero, string? bloco = null, Guid hostId = default)
     {
         ValidarNumero(numero);
         Numero = numero.Trim().ToUpper();
         Bloco = string.IsNullOrWhiteSpace(bloco) ? string.Empty : bloco.Trim().ToUpper();
         Ocupado = false;
+        HostId = hostId;
     }
 
     /// <summary>

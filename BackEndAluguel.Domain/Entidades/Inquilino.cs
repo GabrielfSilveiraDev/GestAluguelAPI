@@ -89,6 +89,12 @@ public class Inquilino : EntidadeBase
     /// </summary>
     public Apartamento? Apartamento { get; private set; }
 
+    /// <summary>
+    /// Identificador do host (locador) dono deste inquilino.
+    /// Chave de isolamento multi-tenant — FK para a entidade Host.
+    /// </summary>
+    public Guid HostId { get; private set; }
+
     // =============================================================
     // RELACIONAMENTO: 1 Inquilino -> N Faturas
     // Um inquilino pode ter uma fatura gerada por mês de referência.
@@ -125,7 +131,8 @@ public class Inquilino : EntidadeBase
         Guid apartamentoId,
         DateOnly dataNascimento = default,
         List<int>? diasAlertaVencimento = null,
-        decimal garagem = 0m)
+        decimal garagem = 0m,
+        Guid hostId = default)
     {
         ValidarNome(nomeCompleto);
         ValidarCpf(cpf);
@@ -143,6 +150,7 @@ public class Inquilino : EntidadeBase
         DataNascimento = dataNascimento;
         DiasAlertaVencimento = diasAlertaVencimento ?? new List<int> { 30, 60, 90 };
         Garagem = garagem < 0 ? 0 : garagem;
+        HostId = hostId;
     }
 
     /// <summary>
@@ -164,7 +172,8 @@ public class Inquilino : EntidadeBase
         string telefone,
         EstadoCivil estadoCivil,
         List<int>? diasAlertaVencimento = null,
-        decimal garagem = 0m)
+        decimal garagem = 0m,
+        Guid hostId = default)
     {
         ValidarNome(nomeCompleto);
         ValidarCpf(cpf);
@@ -189,6 +198,7 @@ public class Inquilino : EntidadeBase
         EstadoCivil = estadoCivil;
         DiasAlertaVencimento = diasAlertaVencimento ?? new List<int> { 30, 60, 90 };
         Garagem = garagem < 0 ? 0 : garagem;
+        HostId = hostId;
     }
 
     /// <summary>Atualiza as informações básicas do inquilino (sem RG, órgão emissor, telefone e estado civil).</summary>

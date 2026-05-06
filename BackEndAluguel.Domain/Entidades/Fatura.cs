@@ -103,6 +103,12 @@ public class Fatura : EntidadeBase
     public Inquilino? Inquilino { get; private set; }
 
     /// <summary>
+    /// Identificador do host (locador) dono desta fatura.
+    /// Chave de isolamento multi-tenant — FK para a entidade Host.
+    /// </summary>
+    public Guid HostId { get; private set; }
+
+    /// <summary>
     /// Construtor protegido requerido pelo Entity Framework Core.
     /// </summary>
     protected Fatura() { }
@@ -133,7 +139,8 @@ public class Fatura : EntidadeBase
         decimal? kwAtual = null,
         decimal? kwhValor = null,
         string? codigoPix = null,
-        decimal valorGaragem = 0m)
+        decimal valorGaragem = 0m,
+        Guid hostId = default)
     {
         ValidarMesReferencia(mesReferencia);
         if (valorAluguel <= 0)
@@ -157,6 +164,7 @@ public class Fatura : EntidadeBase
         KwhValor = kwhValor;
         CodigoPix = codigoPix;
         Status = StatusFatura.Pendente;
+        HostId = hostId;
     }
 
     /// <summary>

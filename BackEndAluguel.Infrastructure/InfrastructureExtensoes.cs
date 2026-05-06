@@ -1,4 +1,5 @@
 ﻿using BackEndAluguel.Application.Auth;
+using BackEndAluguel.Application.Comum;
 using BackEndAluguel.Application.Contratos;
 using BackEndAluguel.Application.Pagamentos;
 using BackEndAluguel.Domain.Interfaces;
@@ -79,6 +80,12 @@ public static class InfrastructureExtensoes
         // Registra o gerador de payload PIX (EMV/copia-e-cola, sem API externa)
         services.AddScoped<IPixPayloadGerador, PixPayloadGerador>();
 
+        // Registra o contexto de tenant (multi-tenancy via JWT hostId claim)
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContexto, TenantContexto>();
+
         return services;
     }
 }
+
+
