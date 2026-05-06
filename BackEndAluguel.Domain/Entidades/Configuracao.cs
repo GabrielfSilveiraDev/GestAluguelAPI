@@ -44,13 +44,20 @@ public class Configuracao : EntidadeBase
     /// <summary>Cidade do recebedor conforme cadastro PIX (máx. 15 caracteres).</summary>
     public string? CidadeRecebedorPix { get; private set; }
 
+    /// <summary>
+    /// Identificador do host (locador) dono desta configuração.
+    /// Chave de isolamento multi-tenant — FK para a entidade Host.
+    /// </summary>
+    public Guid HostId { get; private set; }
+
     protected Configuracao() { }
 
-    public Configuracao(decimal kwhValor, decimal valorAgua)
+    public Configuracao(decimal kwhValor, decimal valorAgua, Guid hostId = default)
     {
         ValidarValores(kwhValor, valorAgua);
         KwhValor = kwhValor;
         ValorAgua = valorAgua;
+        HostId = hostId;
     }
 
     public void Atualizar(decimal kwhValor, decimal valorAgua)

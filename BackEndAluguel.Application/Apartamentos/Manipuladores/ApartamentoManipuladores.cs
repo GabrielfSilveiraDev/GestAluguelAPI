@@ -1,6 +1,7 @@
 ﻿using BackEndAluguel.Application.Apartamentos.Comandos;
 using BackEndAluguel.Application.Apartamentos.Consultas;
 using BackEndAluguel.Application.Apartamentos.DTOs;
+using BackEndAluguel.Application.Comum;
 using BackEndAluguel.Application.Comum.Excecoes;
 using BackEndAluguel.Domain.Entidades;
 using BackEndAluguel.Domain.Interfaces;
@@ -15,22 +16,14 @@ namespace BackEndAluguel.Application.Apartamentos.Manipuladores;
 public class CriarApartamentoManipulador : IRequestHandler<CriarApartamentoComando, ApartamentoDto>
 {
     private readonly IApartamentoRepositorio _repositorio;
+    private readonly ITenantContexto _tenantContexto;
 
-    /// <summary>
-    /// Inicializa o manipulador com o repositório de apartamentos via injeção de dependência.
-    /// </summary>
-    /// <param name="repositorio">Repositório de apartamentos.</param>
-    public CriarApartamentoManipulador(IApartamentoRepositorio repositorio)
+    public CriarApartamentoManipulador(IApartamentoRepositorio repositorio, ITenantContexto tenantContexto)
     {
         _repositorio = repositorio;
+        _tenantContexto = tenantContexto;
     }
 
-    /// <summary>
-    /// Processa o comando de criação, valida existência prévia e persiste o novo apartamento.
-    /// </summary>
-    /// <param name="request">Dados do apartamento a ser criado.</param>
-    /// <param name="cancellationToken">Token de cancelamento.</param>
-    /// <returns>DTO com os dados do apartamento criado.</returns>
     public async Task<ApartamentoDto> Handle(CriarApartamentoComando request, CancellationToken cancellationToken)
     {
         var blocoNormalizado = string.IsNullOrWhiteSpace(request.Bloco) ? string.Empty : request.Bloco.Trim().ToUpper();
@@ -39,7 +32,8 @@ public class CriarApartamentoManipulador : IRequestHandler<CriarApartamentoComan
             throw new RegraDeNegocioExcecao($"Ja existe um apartamento com o numero '{request.Numero}'" +
                 (string.IsNullOrEmpty(blocoNormalizado) ? "." : $" no bloco '{blocoNormalizado}'."));
 
-        var apartamento = new Apartamento(request.Numero, request.Bloco);
+        var hostId = _tenantContexto.ObterHostId() ?? Guid.Empty;
+        var apartamento = new Apartamento(request.Numero, request.Bloco, hostId);
         await _repositorio.AdicionarAsync(apartamento, cancellationToken);
         await _repositorio.SalvarAlteracoesAsync(cancellationToken);
 

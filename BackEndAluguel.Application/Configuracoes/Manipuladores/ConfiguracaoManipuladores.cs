@@ -1,4 +1,5 @@
-﻿using BackEndAluguel.Application.Comum.Excecoes;
+﻿using BackEndAluguel.Application.Comum;
+using BackEndAluguel.Application.Comum.Excecoes;
 using BackEndAluguel.Application.Configuracoes.Comandos;
 using BackEndAluguel.Application.Configuracoes.Consultas;
 using BackEndAluguel.Application.Configuracoes.DTOs;
@@ -45,22 +46,24 @@ public class ObterConfiguracaoManipulador : IRequestHandler<ObterConfiguracaoCon
 public class AtualizarConfiguracaoManipulador : IRequestHandler<AtualizarConfiguracaoComando, ConfiguracaoDto>
 {
     private readonly IConfiguracaoRepositorio _repositorio;
+    private readonly ITenantContexto _tenantContexto;
 
-    /// <summary>Inicializa o manipulador com o repositorio de configuracoes.</summary>
-    public AtualizarConfiguracaoManipulador(IConfiguracaoRepositorio repositorio)
+    public AtualizarConfiguracaoManipulador(IConfiguracaoRepositorio repositorio, ITenantContexto tenantContexto)
     {
         _repositorio = repositorio;
+        _tenantContexto = tenantContexto;
     }
 
-    /// <summary>Processa a atualizacao da configuracao global do sistema (cria se nao existir — upsert).</summary>
+    /// <summary>Processa a atualizacao da configuracao do host (cria se nao existir — upsert).</summary>
     public async Task<ConfiguracaoDto> Handle(AtualizarConfiguracaoComando request, CancellationToken cancellationToken)
     {
         var config = await _repositorio.ObterConfiguracaoAsync(cancellationToken);
 
         if (config is null)
         {
-            // Primeira configuracao: cria o registro singleton
-            config = new Configuracao(request.KwhValor, request.ValorAgua);
+            // Primeira configuracao: cria o registro para este host
+            var hostId = _tenantContexto.ObterHostId() ?? Guid.Empty;
+            config = new Configuracao(request.KwhValor, request.ValorAgua, hostId);
             await _repositorio.AdicionarAsync(config, cancellationToken);
         }
         else

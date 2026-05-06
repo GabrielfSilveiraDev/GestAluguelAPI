@@ -6,9 +6,6 @@ namespace BackEndAluguel.Infrastructure.Configuracoes;
 
 public class ConfiguracaoConfiguracao : IEntityTypeConfiguration<Configuracao>
 {
-    // ID fixo para o registro singleton
-    public static readonly Guid ConfiguracaoId = new("00000000-0000-0000-0000-000000000001");
-
     public void Configure(EntityTypeBuilder<Configuracao> builder)
     {
         builder.ToTable("Configuracoes");
@@ -26,6 +23,22 @@ public class ConfiguracaoConfiguracao : IEntityTypeConfiguration<Configuracao>
         builder.Property(c => c.ChavePix).HasMaxLength(150).IsRequired(false);
         builder.Property(c => c.NomeRecebedorPix).HasMaxLength(25).IsRequired(false);
         builder.Property(c => c.CidadeRecebedorPix).HasMaxLength(15).IsRequired(false);
+
+        // HostId — chave de isolamento multi-tenant (1 Configuracao por Host)
+        builder.Property(c => c.HostId)
+            .HasColumnName("HostId")
+            .IsRequired();
+
+        // FK para a tabela Hosts
+        builder.HasOne<BackEndAluguel.Domain.Entidades.Host>()
+            .WithMany()
+            .HasForeignKey(c => c.HostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Índice único: um registro de configuração por host
+        builder.HasIndex(c => c.HostId)
+            .IsUnique()
+            .HasDatabaseName("IX_Configuracoes_HostId");
 
         builder.Property(c => c.CriadoEm).IsRequired();
         builder.Property(c => c.AtualizadoEm).IsRequired(false);

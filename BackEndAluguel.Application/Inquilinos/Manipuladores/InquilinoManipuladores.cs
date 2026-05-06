@@ -1,4 +1,5 @@
-﻿using BackEndAluguel.Application.Comum.Excecoes;
+﻿using BackEndAluguel.Application.Comum;
+using BackEndAluguel.Application.Comum.Excecoes;
 using BackEndAluguel.Application.Inquilinos.Comandos;
 using BackEndAluguel.Application.Inquilinos.Consultas;
 using BackEndAluguel.Application.Inquilinos.DTOs;
@@ -13,11 +14,13 @@ public class CriarInquilinoManipulador : IRequestHandler<CriarInquilinoComando, 
 {
     private readonly IInquilinoRepositorio _inquilinoRepositorio;
     private readonly IApartamentoRepositorio _apartamentoRepositorio;
+    private readonly ITenantContexto _tenantContexto;
 
-    public CriarInquilinoManipulador(IInquilinoRepositorio inquilinoRepositorio, IApartamentoRepositorio apartamentoRepositorio)
+    public CriarInquilinoManipulador(IInquilinoRepositorio inquilinoRepositorio, IApartamentoRepositorio apartamentoRepositorio, ITenantContexto tenantContexto)
     {
         _inquilinoRepositorio = inquilinoRepositorio;
         _apartamentoRepositorio = apartamentoRepositorio;
+        _tenantContexto = tenantContexto;
     }
 
     public async Task<InquilinoDto> Handle(CriarInquilinoComando request, CancellationToken cancellationToken)
@@ -31,12 +34,14 @@ public class CriarInquilinoManipulador : IRequestHandler<CriarInquilinoComando, 
         var apartamento = await _apartamentoRepositorio.ObterPorIdAsync(request.ApartamentoId, cancellationToken)
             ?? throw new EntidadeNaoEncontradaExcecao(nameof(Apartamento), request.ApartamentoId);
 
+        var hostId = _tenantContexto.ObterHostId() ?? Guid.Empty;
+
         var inquilino = new Inquilino(
             request.NomeCompleto, request.Cpf, request.QuantidadeMoradores,
             request.DataEntrada, request.DataVencimentoContrato, request.ValorAluguel,
             request.ApartamentoId, request.DataNascimento,
             request.Rg, request.OrgaoEmissor, request.Telefone, request.EstadoCivil,
-            request.DiasAlertaVencimento, request.Garagem);
+            request.DiasAlertaVencimento, request.Garagem, hostId);
 
         await _inquilinoRepositorio.AdicionarAsync(inquilino, cancellationToken);
         apartamento.MarcarComoOcupado();

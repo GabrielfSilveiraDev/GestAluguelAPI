@@ -1,5 +1,6 @@
 ﻿using BackEndAluguel.Application.Apartamentos.Comandos;
 using BackEndAluguel.Application.Apartamentos.Manipuladores;
+using BackEndAluguel.Application.Comum;
 using BackEndAluguel.Application.Comum.Excecoes;
 using BackEndAluguel.Domain.Entidades;
 using BackEndAluguel.Domain.Interfaces;
@@ -8,20 +9,16 @@ using Moq;
 
 namespace BackEndAluguel.Tests.Aplicacao;
 
-/// <summary>
-/// Testes unitários para os manipuladores CQRS de Apartamento.
-/// Usa Moq para simular o repositório e validar o comportamento dos handlers.
-/// </summary>
 public class ApartamentoManipuladorTestes
 {
     private readonly Mock<IApartamentoRepositorio> _repositorioMock;
+    private readonly Mock<ITenantContexto> _tenantContextoMock;
 
-    /// <summary>
-    /// Inicializa os mocks antes de cada teste.
-    /// </summary>
     public ApartamentoManipuladorTestes()
     {
         _repositorioMock = new Mock<IApartamentoRepositorio>();
+        _tenantContextoMock = new Mock<ITenantContexto>();
+        _tenantContextoMock.Setup(t => t.ObterHostId()).Returns(Guid.NewGuid());
     }
 
     // =====================================================
@@ -42,7 +39,7 @@ public class ApartamentoManipuladorTestes
         _repositorioMock.Setup(r => r.SalvarAlteracoesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        var manipulador = new CriarApartamentoManipulador(_repositorioMock.Object);
+        var manipulador = new CriarApartamentoManipulador(_repositorioMock.Object, _tenantContextoMock.Object);
         var comando = new CriarApartamentoComando("101", "A");
 
         // Act
@@ -58,9 +55,6 @@ public class ApartamentoManipuladorTestes
         _repositorioMock.Verify(r => r.SalvarAlteracoesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    /// <summary>
-    /// Verifica que criar apartamento duplicado lança RegraDeNegocioExcecao.
-    /// </summary>
     [Fact]
     public async Task CriarApartamento_ApartamentoJaExistente_DeveLancarRegraDeNegocioExcecao()
     {
@@ -68,7 +62,7 @@ public class ApartamentoManipuladorTestes
         _repositorioMock.Setup(r => r.ExisteAsync("101", "A", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var manipulador = new CriarApartamentoManipulador(_repositorioMock.Object);
+        var manipulador = new CriarApartamentoManipulador(_repositorioMock.Object, _tenantContextoMock.Object);
         var comando = new CriarApartamentoComando("101", "A");
 
         // Act

@@ -1,4 +1,5 @@
-﻿using BackEndAluguel.Application.Comum.Excecoes;
+﻿using BackEndAluguel.Application.Comum;
+using BackEndAluguel.Application.Comum.Excecoes;
 using BackEndAluguel.Application.Inquilinos.Comandos;
 using BackEndAluguel.Application.Inquilinos.Manipuladores;
 using BackEndAluguel.Domain.Entidades;
@@ -16,6 +17,7 @@ public class InquilinoManipuladorTestes
 {
     private readonly Mock<IInquilinoRepositorio> _inquilinoRepositorioMock;
     private readonly Mock<IApartamentoRepositorio> _apartamentoRepositorioMock;
+    private readonly Mock<ITenantContexto> _tenantContextoMock;
 
     private static readonly Guid ApartamentoId = Guid.NewGuid();
     private static readonly DateOnly DataEntrada = new(2024, 1, 1);
@@ -29,6 +31,8 @@ public class InquilinoManipuladorTestes
     {
         _inquilinoRepositorioMock = new Mock<IInquilinoRepositorio>();
         _apartamentoRepositorioMock = new Mock<IApartamentoRepositorio>();
+        _tenantContextoMock = new Mock<ITenantContexto>();
+        _tenantContextoMock.Setup(t => t.ObterHostId()).Returns(Guid.NewGuid());
     }
 
     // =====================================================
@@ -53,7 +57,7 @@ public class InquilinoManipuladorTestes
         _inquilinoRepositorioMock.Setup(r => r.SalvarAlteracoesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        var manipulador = new CriarInquilinoManipulador(_inquilinoRepositorioMock.Object, _apartamentoRepositorioMock.Object);
+        var manipulador = new CriarInquilinoManipulador(_inquilinoRepositorioMock.Object, _apartamentoRepositorioMock.Object, _tenantContextoMock.Object);
         var comando = new CriarInquilinoComando("João da Silva", "12345678901", DataNascimento, "12345678", "SSP-SP", "11999990000", Domain.Enumeradores.EstadoCivil.Solteiro, 2, DataEntrada, DataVencimento, 1500m, ApartamentoId);
 
         // Act
@@ -81,7 +85,7 @@ public class InquilinoManipuladorTestes
         _inquilinoRepositorioMock.Setup(r => r.ExistePorCpfAsync("12345678901", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var manipulador = new CriarInquilinoManipulador(_inquilinoRepositorioMock.Object, _apartamentoRepositorioMock.Object);
+        var manipulador = new CriarInquilinoManipulador(_inquilinoRepositorioMock.Object, _apartamentoRepositorioMock.Object, _tenantContextoMock.Object);
         var comando = new CriarInquilinoComando("João", "12345678901", DataNascimento, "12345678", "SSP-SP", "11999990000", Domain.Enumeradores.EstadoCivil.Solteiro, 1, DataEntrada, DataVencimento, 1000m, ApartamentoId);
 
         // Act
@@ -106,7 +110,7 @@ public class InquilinoManipuladorTestes
         _apartamentoRepositorioMock.Setup(r => r.ObterPorIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Apartamento?)null);
 
-        var manipulador = new CriarInquilinoManipulador(_inquilinoRepositorioMock.Object, _apartamentoRepositorioMock.Object);
+        var manipulador = new CriarInquilinoManipulador(_inquilinoRepositorioMock.Object, _apartamentoRepositorioMock.Object, _tenantContextoMock.Object);
         var comando = new CriarInquilinoComando("João", "12345678901", DataNascimento, "12345678", "SSP-SP", "11999990000", Domain.Enumeradores.EstadoCivil.Solteiro, 1, DataEntrada, DataVencimento, 1000m, Guid.NewGuid());
 
         // Act
