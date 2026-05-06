@@ -116,12 +116,13 @@ builder.Services.AddCors(opcoes =>
 {
     opcoes.AddPolicy("PermitirFrontEnd", politica =>
         politica
-            .WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "https://gest-aluguel-front-end-9lin.vercel.app", // Sua URL principal
-                "https://gest-aluguel-front-end-9lin-2jzt75ho8.vercel.app" // URL de preview
-            )
+            .SetIsOriginAllowed(origin =>
+            {
+                var uri = new Uri(origin);
+                return uri.Host == "localhost" ||
+                       uri.Host.EndsWith(".vercel.app") ||
+                       uri.Host == "gest-aluguel-front-end-9lin-kzioth3ed.vercel.app";
+            })
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
