@@ -1,4 +1,5 @@
 ﻿using BackEndAluguel.Api.Modelos;
+using BackEndAluguel.Application.Configuracoes.DTOs;
 using BackEndAluguel.Application.Faturas.Comandos;
 using BackEndAluguel.Application.Faturas.Consultas;
 using BackEndAluguel.Application.Faturas.DTOs;
@@ -200,6 +201,44 @@ public class FaturasController : ControllerBase
     {
         var resultado = await _mediator.Send(new GerarCobrancaPixComando(id, corpo?.PercentualSplit), cancellationToken);
         return Ok(RespostaApi<CobrancaPixResultadoDto>.Ok(resultado, "Cobrança PIX gerada com sucesso."));
+    }
+
+    /// <summary>
+    /// Gera o link WhatsApp (wa.me) com a mensagem padrão e o código PIX pré-preenchidos,
+    /// direcionando para o número de telefone do inquilino vinculado à fatura.
+    /// Não requer nenhuma API paga — usa o link gratuito wa.me do WhatsApp.
+    /// Pré-requisito: inquilino deve ter telefone cadastrado e a mensagem padrão deve estar
+    /// configurada em PUT /api/configuracoes/whatsapp.
+    /// </summary>
+    /// <param name="id">Identificador único da fatura.</param>
+    /// <response code="200">Link WhatsApp gerado com sucesso.</response>
+    /// <response code="404">Fatura não encontrada.</response>
+    [HttpGet("{id:guid}/whatsapp-link")]
+    [ProducesResponseType(typeof(RespostaApi<WhatsAppLinkDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RespostaErro), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ObterLinkWhatsapp(Guid id, CancellationToken cancellationToken)
+    {
+        var resultado = await _mediator.Send(new ObterLinkWhatsappConsulta(id), cancellationToken);
+        return Ok(RespostaApi<WhatsAppLinkDto>.Ok(resultado));
+    }
+
+    /// <summary>
+    /// Gera o código PIX copia-e-cola (padrão EMV do Banco Central) para a fatura especificada,
+    /// usando os dados PIX configurados pelo locador. Não requer gateway externo.
+    /// Pré-requisito: configurar ChavePix, NomeRecebedor e CidadeRecebedor via PUT /api/configuracoes/pix.
+    /// </summary>
+    /// <param name="id">Identificador único da fatura.</param>
+    /// <response code="200">Código PIX copia-e-cola como texto puro.</response>
+    /// <response code="400">Dados PIX não configurados.</response>
+    /// <response code="404">Fatura não encontrada.</response>
+    [HttpGet("{id:guid}/pix-nativo")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RespostaErro), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(RespostaErro), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GerarPixNativo(Guid id, CancellationToken cancellationToken)
+    {
+        var codigoPix = await _mediator.Send(new GerarPixNativoConsulta(id), cancellationToken);
+        return Content(codigoPix, "text/plain");
     }
 }
 
