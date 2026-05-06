@@ -153,13 +153,24 @@ public class AtualizarWhatsappManipulador : IRequestHandler<AtualizarWhatsappCom
 public class AtualizarPixNativoManipulador : IRequestHandler<AtualizarPixNativoComando, ConfiguracaoDto>
 {
     private readonly IConfiguracaoRepositorio _repositorio;
+    private readonly ITenantContexto _tenantContexto;
 
-    public AtualizarPixNativoManipulador(IConfiguracaoRepositorio repositorio) => _repositorio = repositorio;
+    public AtualizarPixNativoManipulador(IConfiguracaoRepositorio repositorio, ITenantContexto tenantContexto)
+    {
+        _repositorio = repositorio;
+        _tenantContexto = tenantContexto;
+    }
 
     public async Task<ConfiguracaoDto> Handle(AtualizarPixNativoComando request, CancellationToken cancellationToken)
     {
-        var config = await _repositorio.ObterConfiguracaoAsync(cancellationToken)
-            ?? throw new RegraDeNegocioExcecao("Configuracao global nao encontrada. Use PUT /api/configuracoes para criar.");
+        var config = await _repositorio.ObterConfiguracaoAsync(cancellationToken);
+
+        if (config is null)
+        {
+            var hostId = _tenantContexto.ObterHostId() ?? Guid.Empty;
+            config = new Configuracao(0, 0, hostId);
+            await _repositorio.AdicionarAsync(config, cancellationToken);
+        }
 
         config.AtualizarPix(request.ChavePix, request.NomeRecebedor, request.CidadeRecebedor);
         _repositorio.Atualizar(config);
