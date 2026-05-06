@@ -1,4 +1,5 @@
 ﻿using BackEndAluguel.Application.Comum.Excecoes;
+using BackEndAluguel.Application.Configuracoes.DTOs;
 using BackEndAluguel.Application.Faturas.Comandos;
 using BackEndAluguel.Application.Faturas.Consultas;
 using BackEndAluguel.Application.Faturas.DTOs;
@@ -82,6 +83,9 @@ public class CriarFaturaManipulador : IRequestHandler<CriarFaturaComando, Fatura
         // Usa ValorAgua da config se nao foi fornecido manualmente
         decimal valorAgua = request.ValorAguaManual ?? config?.ValorAgua ?? 0m;
 
+        // Usa Garagem do inquilino se nao foi fornecido manualmente
+        decimal valorGaragem = request.ValorGaragem ?? inquilino.Garagem;
+
         var fatura = new Fatura(
             request.MesReferencia,
             request.ValorAluguel,
@@ -92,7 +96,8 @@ public class CriarFaturaManipulador : IRequestHandler<CriarFaturaComando, Fatura
             kwMesAnterior,
             request.KwAtual,
             kwhValor,
-            request.CodigoPix);
+            request.CodigoPix,
+            valorGaragem);
 
         await _faturaRepositorio.AdicionarAsync(fatura, cancellationToken);
         await _faturaRepositorio.SalvarAlteracoesAsync(cancellationToken);
@@ -127,10 +132,14 @@ public class CriarFaturaManipulador : IRequestHandler<CriarFaturaComando, Fatura
         };
 
         return new FaturaDto(
-            f.Id, f.MesReferencia, f.ValorAluguel, f.ValorAgua, f.ValorLuz,
+            f.Id, f.MesReferencia, f.ValorAluguel, f.ValorAgua, f.ValorLuz, f.ValorGaragem,
             f.CalcularValorTotal(), f.DataLimitePagamento, f.DataPagamento,
             f.CodigoPix, statusEfetivo, statusDescricao, f.InquilinoId, f.CriadoEm,
-            f.KwMesAnterior, f.KwAtual, f.KwConsumidos, f.KwhValor, f.CobrancaAsaasId);
+            f.KwMesAnterior, f.KwAtual, f.KwConsumidos, f.KwhValor, f.CobrancaAsaasId,
+            ApartamentoId: f.Inquilino?.ApartamentoId,
+            NumeroApartamento: f.Inquilino?.Apartamento?.Numero,
+            BlocoApartamento: string.IsNullOrWhiteSpace(f.Inquilino?.Apartamento?.Bloco)
+                ? null : f.Inquilino!.Apartamento!.Bloco);
     }
 }
 
@@ -460,3 +469,128 @@ public class GerarCobrancaPixManipulador : IRequestHandler<GerarCobrancaPixComan
         return resultado;
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WhatsApp & PIX Nativo
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// <summary>
+/// Manipulador CQRS para <see cref="ObterLinkWhatsappConsulta"/>.
+/// Gera o link wa.me com a mensagem padrão formatada e o código PIX embutido,
+/// sem depender de nenhuma API externa — usa apenas wa.me (gratuito).
+/// </summary>
+public class ObterLinkWhatsappManipulador : IRequestHandler<ObterLinkWhatsappConsulta, WhatsAppLinkDto>
+{
+    private readonly IFaturaRepositorio _faturaRepositorio;
+    private readonly IInquilinoRepositorio _inquilinoRepositorio;
+    private readonly IConfiguracaoRepositorio _configuracaoRepositorio;
+    private readonly IPixPayloadGerador _pixGerador;
+
+    public ObterLinkWhatsappManipulador(
+        IFaturaRepositorio faturaRepositorio,
+        IInquilinoRepositorio inquilinoRepositorio,
+        IConfiguracaoRepositorio configuracaoRepositorio,
+        IPixPayloadGerador pixGerador)
+    {
+        _faturaRepositorio = faturaRepositorio;
+        _inquilinoRepositorio = inquilinoRepositorio;
+        _configuracaoRepositorio = configuracaoRepositorio;
+        _pixGerador = pixGerador;
+    }
+
+    public async Task<WhatsAppLinkDto> Handle(ObterLinkWhatsappConsulta request, CancellationToken cancellationToken)
+    {
+        var fatura = await _faturaRepositorio.ObterPorIdAsync(request.FaturaId, cancellationToken)
+            ?? throw new EntidadeNaoEncontradaExcecao(nameof(Fatura), request.FaturaId);
+
+        var inquilino = await _inquilinoRepositorio.ObterPorIdAsync(fatura.InquilinoId, cancellationToken)
+            ?? throw new EntidadeNaoEncontradaExcecao(nameof(Inquilino), fatura.InquilinoId);
+
+        var config = await _configuracaoRepositorio.ObterConfiguracaoAsync(cancellationToken);
+
+        // Gera PIX nativo se a chave estiver configurada
+        string? codigoPix = null;
+        if (config is not null &&
+            !string.IsNullOrWhiteSpace(config.ChavePix) &&
+            !string.IsNullOrWhiteSpace(config.NomeRecebedorPix) &&
+            !string.IsNullOrWhiteSpace(config.CidadeRecebedorPix))
+        {
+            var txId = $"FAT{fatura.Id.ToString("N")[..20]}";
+            codigoPix = _pixGerador.Gerar(
+                config.ChavePix,
+                config.NomeRecebedorPix,
+                config.CidadeRecebedorPix,
+                fatura.CalcularValorTotal(),
+                txId);
+        }
+        // Se já houver um código PIX salvo na fatura, usa ele como fallback
+        codigoPix ??= fatura.CodigoPix;
+
+        // Formata a mensagem usando o template configurado
+        var template = config?.MensagemPadraoWhatsapp
+            ?? "Olá {inquilino}, segue sua fatura de {mesReferencia}.\nValor: R$ {valorTotal}\nVencimento: {dataVencimento}\nPIX: {codigoPix}";
+
+        var mensagem = template
+            .Replace("{inquilino}", inquilino.NomeCompleto)
+            .Replace("{mesReferencia}", fatura.MesReferencia)
+            .Replace("{valorTotal}", fatura.CalcularValorTotal().ToString("F2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")))
+            .Replace("{dataVencimento}", fatura.DataLimitePagamento.ToString("dd/MM/yyyy"))
+            .Replace("{codigoPix}", codigoPix ?? "(PIX não configurado)");
+
+        // Número do inquilino — normaliza para formato whatsapp (somente dígitos, DDI 55 se necessário)
+        var telefone = new string(inquilino.Telefone.Where(char.IsDigit).ToArray());
+        if (!telefone.StartsWith("55") && telefone.Length <= 11)
+            telefone = "55" + telefone;
+
+        // Link wa.me com mensagem pré-preenchida
+        var mensagemEncoded = Uri.EscapeDataString(mensagem);
+        var link = $"https://wa.me/{telefone}?text={mensagemEncoded}";
+
+        return new WhatsAppLinkDto(link, mensagem, codigoPix, inquilino.Telefone);
+    }
+}
+
+/// <summary>
+/// Manipulador CQRS para <see cref="GerarPixNativoConsulta"/>.
+/// Gera apenas o payload PIX EMV (copia-e-cola) para uma fatura usando a ChavePix configurada.
+/// </summary>
+public class GerarPixNativoManipulador : IRequestHandler<GerarPixNativoConsulta, string>
+{
+    private readonly IFaturaRepositorio _faturaRepositorio;
+    private readonly IConfiguracaoRepositorio _configuracaoRepositorio;
+    private readonly IPixPayloadGerador _pixGerador;
+
+    public GerarPixNativoManipulador(
+        IFaturaRepositorio faturaRepositorio,
+        IConfiguracaoRepositorio configuracaoRepositorio,
+        IPixPayloadGerador pixGerador)
+    {
+        _faturaRepositorio = faturaRepositorio;
+        _configuracaoRepositorio = configuracaoRepositorio;
+        _pixGerador = pixGerador;
+    }
+
+    public async Task<string> Handle(GerarPixNativoConsulta request, CancellationToken cancellationToken)
+    {
+        var fatura = await _faturaRepositorio.ObterPorIdAsync(request.FaturaId, cancellationToken)
+            ?? throw new EntidadeNaoEncontradaExcecao(nameof(Fatura), request.FaturaId);
+
+        var config = await _configuracaoRepositorio.ObterConfiguracaoAsync(cancellationToken);
+
+        if (config is null ||
+            string.IsNullOrWhiteSpace(config.ChavePix) ||
+            string.IsNullOrWhiteSpace(config.NomeRecebedorPix) ||
+            string.IsNullOrWhiteSpace(config.CidadeRecebedorPix))
+            throw new RegraDeNegocioExcecao(
+                "Dados PIX nao configurados. Configure via PUT /api/configuracoes/pix antes de gerar o codigo.");
+
+        var txId = $"FAT{fatura.Id.ToString("N")[..20]}";
+        return _pixGerador.Gerar(
+            config.ChavePix,
+            config.NomeRecebedorPix,
+            config.CidadeRecebedorPix,
+            fatura.CalcularValorTotal(),
+            txId);
+    }
+}
+

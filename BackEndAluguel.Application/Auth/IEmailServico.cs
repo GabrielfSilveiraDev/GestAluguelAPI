@@ -19,4 +19,3 @@ public interface IEmailServico
         string tokenConfirmacao,
         CancellationToken cancellationToken = default);
 }
-

@@ -188,4 +188,3 @@ public class LoginInquilinoManipulador : IRequestHandler<LoginInquilinoComando, 
     }
 }
 
-

@@ -17,6 +17,16 @@ public class ConfiguracaoConfiguracao : IEntityTypeConfiguration<Configuracao>
         builder.Property(c => c.KwhValor).HasPrecision(18, 4).IsRequired();
         builder.Property(c => c.ValorAgua).HasPrecision(18, 2).IsRequired();
         builder.Property(c => c.WalletIdAsaas).HasMaxLength(100).IsRequired(false);
+
+        // WhatsApp
+        builder.Property(c => c.NumeroWhatsappLocador).HasMaxLength(20).IsRequired(false);
+        builder.Property(c => c.MensagemPadraoWhatsapp).HasMaxLength(1000).IsRequired(false);
+
+        // PIX nativo
+        builder.Property(c => c.ChavePix).HasMaxLength(150).IsRequired(false);
+        builder.Property(c => c.NomeRecebedorPix).HasMaxLength(25).IsRequired(false);
+        builder.Property(c => c.CidadeRecebedorPix).HasMaxLength(15).IsRequired(false);
+
         builder.Property(c => c.CriadoEm).IsRequired();
         builder.Property(c => c.AtualizadoEm).IsRequired(false);
     }

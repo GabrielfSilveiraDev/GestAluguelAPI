@@ -26,4 +26,3 @@ public interface IJwtServico
     /// <returns>Token JWT assinado e data/hora de expiracao (UTC).</returns>
     (string Token, DateTime Expiracao) GerarTokenInquilino(Guid inquilinoId, string nomeCompleto, string cpf);
 }
-

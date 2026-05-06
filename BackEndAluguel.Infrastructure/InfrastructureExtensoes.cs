@@ -76,9 +76,9 @@ public static class InfrastructureExtensoes
         // Registra o servico de envio de e-mails (SMTP)
         services.AddScoped<IEmailServico, EmailServico>();
 
+        // Registra o gerador de payload PIX (EMV/copia-e-cola, sem API externa)
+        services.AddScoped<IPixPayloadGerador, PixPayloadGerador>();
+
         return services;
     }
 }
-
-
-

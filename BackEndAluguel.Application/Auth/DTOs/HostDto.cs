@@ -19,4 +19,3 @@ public record HostDto(
     bool EmailConfirmado,
     DateTime CriadoEm
 );
-

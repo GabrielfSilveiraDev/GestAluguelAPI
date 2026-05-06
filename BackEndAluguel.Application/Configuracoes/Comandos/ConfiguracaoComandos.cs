@@ -7,8 +7,6 @@ namespace BackEndAluguel.Application.Configuracoes.Comandos;
 /// <summary>
 /// Comando CQRS para atualizar os valores globais de configuracao do sistema.
 /// </summary>
-/// <param name="KwhValor">Novo valor do kWh em reais.</param>
-/// <param name="ValorAgua">Novo valor fixo mensal da agua.</param>
 public record AtualizarConfiguracaoComando(
     decimal KwhValor,
     decimal ValorAgua
@@ -16,15 +14,7 @@ public record AtualizarConfiguracaoComando(
 
 /// <summary>
 /// Comando CQRS para registrar o locador (host) na plataforma Asaas como subconta.
-/// Apos o cadastro, o WalletId retornado e salvo automaticamente na Configuracao global
-/// para uso nos splits de pagamento PIX.
 /// </summary>
-/// <param name="Nome">Nome completo ou razao social do host.</param>
-/// <param name="Email">E-mail do host para acesso a subconta Asaas.</param>
-/// <param name="CpfCnpj">CPF ou CNPJ do host (somente digitos).</param>
-/// <param name="TipoPessoa">"FISICA" ou "JURIDICA".</param>
-/// <param name="Telefone">Telefone de contato (opcional).</param>
-/// <param name="Site">Site do host (opcional).</param>
 public record CriarSubcontaAsaasComando(
     string Nome,
     string Email,
@@ -33,3 +23,28 @@ public record CriarSubcontaAsaasComando(
     string? Telefone = null,
     string? Site = null
 ) : IRequest<SubcontaResultadoDto>;
+
+/// <summary>
+/// Comando CQRS para configurar a integração com WhatsApp.
+/// </summary>
+/// <param name="NumeroWhatsapp">Número no formato internacional sem '+' (ex: 5511999999999).</param>
+/// <param name="MensagemPadrao">
+/// Template. Placeholders disponíveis: {inquilino}, {mesReferencia}, {valorTotal}, {dataVencimento}, {codigoPix}.
+/// </param>
+public record AtualizarWhatsappComando(
+    string NumeroWhatsapp,
+    string MensagemPadrao
+) : IRequest<ConfiguracaoDto>;
+
+/// <summary>
+/// Comando CQRS para configurar os dados PIX nativos do locador (sem gateway externo).
+/// </summary>
+/// <param name="ChavePix">Chave PIX (CPF, CNPJ, e-mail, telefone ou chave aleatória).</param>
+/// <param name="NomeRecebedor">Nome do recebedor (máx. 25 chars).</param>
+/// <param name="CidadeRecebedor">Cidade do recebedor (máx. 15 chars).</param>
+public record AtualizarPixNativoComando(
+    string ChavePix,
+    string NomeRecebedor,
+    string CidadeRecebedor
+) : IRequest<ConfiguracaoDto>;
+

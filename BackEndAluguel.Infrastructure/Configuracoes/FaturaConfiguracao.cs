@@ -51,6 +51,12 @@ public class FaturaConfiguracao : IEntityTypeConfiguration<Fatura>
             .IsRequired()
             .HasDefaultValue(0m);
 
+        builder.Property(f => f.ValorGaragem)
+            .HasColumnName("ValorGaragem")
+            .HasPrecision(18, 2)
+            .IsRequired()
+            .HasDefaultValue(0m);
+
         // Campos de leitura de kWh (opcionais)
         builder.Property(f => f.KwMesAnterior)
             .HasColumnName("KwMesAnterior")
