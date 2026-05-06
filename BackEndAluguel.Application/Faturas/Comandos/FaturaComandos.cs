@@ -17,6 +17,7 @@ namespace BackEndAluguel.Application.Faturas.Comandos;
 /// <param name="ValorLuzManual">Valor da luz (override manual, opcional).</param>
 /// <param name="ValorAguaManual">Valor da água (override manual, opcional).</param>
 /// <param name="CodigoPix">Código ou link do PIX (opcional).</param>
+/// <param name="ValorGaragem">Valor da garagem (override manual; se nulo, usa inquilino.Garagem).</param>
 public record CriarFaturaComando(
     Guid InquilinoId,
     string MesReferencia,
@@ -26,7 +27,8 @@ public record CriarFaturaComando(
     decimal? KwMesAnteriorManual = null,   // override da busca automatica (para primeira fatura)
     decimal? ValorLuzManual = null,         // override do calculo automatico
     decimal? ValorAguaManual = null,        // override do valor da config
-    string? CodigoPix = null
+    string? CodigoPix = null,
+    decimal? ValorGaragem = null            // se nulo, usa inquilino.Garagem automaticamente
 ) : IRequest<FaturaDto>;
 
 /// <summary>

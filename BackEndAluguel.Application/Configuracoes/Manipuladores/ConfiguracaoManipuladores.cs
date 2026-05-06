@@ -33,7 +33,9 @@ public class ObterConfiguracaoManipulador : IRequestHandler<ObterConfiguracaoCon
 
     /// <summary>Converte a entidade Configuracao para DTO de resposta.</summary>
     internal static ConfiguracaoDto ConverterParaDto(Configuracao c)
-        => new(c.Id, c.KwhValor, c.ValorAgua, c.AtualizadoEm, c.WalletIdAsaas);
+        => new(c.Id, c.KwhValor, c.ValorAgua, c.AtualizadoEm, c.WalletIdAsaas,
+               c.NumeroWhatsappLocador, c.MensagemPadraoWhatsapp,
+               c.ChavePix, c.NomeRecebedorPix, c.CidadeRecebedorPix);
 }
 
 /// <summary>
@@ -68,7 +70,6 @@ public class AtualizarConfiguracaoManipulador : IRequestHandler<AtualizarConfigu
         }
 
         await _repositorio.SalvarAlteracoesAsync(cancellationToken);
-
         return ObterConfiguracaoManipulador.ConverterParaDto(config);
     }
 }
@@ -119,3 +120,48 @@ public class CriarSubcontaAsaasManipulador : IRequestHandler<CriarSubcontaAsaasC
     }
 }
 
+/// <summary>
+/// Manipulador CQRS para o comando <see cref="AtualizarWhatsappComando"/>.
+/// Salva o número de WhatsApp do locador e o template de mensagem padrão.
+/// </summary>
+public class AtualizarWhatsappManipulador : IRequestHandler<AtualizarWhatsappComando, ConfiguracaoDto>
+{
+    private readonly IConfiguracaoRepositorio _repositorio;
+
+    public AtualizarWhatsappManipulador(IConfiguracaoRepositorio repositorio) => _repositorio = repositorio;
+
+    public async Task<ConfiguracaoDto> Handle(AtualizarWhatsappComando request, CancellationToken cancellationToken)
+    {
+        var config = await _repositorio.ObterConfiguracaoAsync(cancellationToken)
+            ?? throw new RegraDeNegocioExcecao("Configuracao global nao encontrada. Use PUT /api/configuracoes para criar.");
+
+        config.AtualizarWhatsapp(request.NumeroWhatsapp, request.MensagemPadrao);
+        _repositorio.Atualizar(config);
+        await _repositorio.SalvarAlteracoesAsync(cancellationToken);
+
+        return ObterConfiguracaoManipulador.ConverterParaDto(config);
+    }
+}
+
+/// <summary>
+/// Manipulador CQRS para o comando <see cref="AtualizarPixNativoComando"/>.
+/// Salva os dados de PIX nativo (chave, nome e cidade) para geração de código sem gateway.
+/// </summary>
+public class AtualizarPixNativoManipulador : IRequestHandler<AtualizarPixNativoComando, ConfiguracaoDto>
+{
+    private readonly IConfiguracaoRepositorio _repositorio;
+
+    public AtualizarPixNativoManipulador(IConfiguracaoRepositorio repositorio) => _repositorio = repositorio;
+
+    public async Task<ConfiguracaoDto> Handle(AtualizarPixNativoComando request, CancellationToken cancellationToken)
+    {
+        var config = await _repositorio.ObterConfiguracaoAsync(cancellationToken)
+            ?? throw new RegraDeNegocioExcecao("Configuracao global nao encontrada. Use PUT /api/configuracoes para criar.");
+
+        config.AtualizarPix(request.ChavePix, request.NomeRecebedor, request.CidadeRecebedor);
+        _repositorio.Atualizar(config);
+        await _repositorio.SalvarAlteracoesAsync(cancellationToken);
+
+        return ObterConfiguracaoManipulador.ConverterParaDto(config);
+    }
+}

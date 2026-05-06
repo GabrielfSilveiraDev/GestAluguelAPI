@@ -51,4 +51,3 @@ public record LoginInquilinoComando(
     DateOnly DataNascimento
 ) : IRequest<TokenResultadoDto>;
 
-

@@ -19,4 +19,3 @@ public record TokenResultadoDto(
     DateTime Expiracao
 );
 
-

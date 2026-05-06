@@ -17,7 +17,9 @@ public record FaturaDto(
     decimal ValorAgua,
     /// <summary>Valor da conta de luz.</summary>
     decimal ValorLuz,
-    /// <summary>Valor total (aluguel + água + luz).</summary>
+    /// <summary>Valor da garagem cobrado nesta fatura.</summary>
+    decimal ValorGaragem,
+    /// <summary>Valor total (aluguel + água + luz + garagem).</summary>
     decimal ValorTotal,
     /// <summary>Data limite para pagamento.</summary>
     DateOnly DataLimitePagamento,
@@ -46,5 +48,11 @@ public record FaturaDto(
     /// Preenchido apos a chamada ao endpoint de geracao de PIX via Asaas.
     /// Nulo quando a cobranca ainda nao foi gerada.
     /// </summary>
-    string? CobrancaAsaasId = null
+    string? CobrancaAsaasId = null,
+    /// <summary>Identificador do apartamento vinculado ao inquilino desta fatura.</summary>
+    Guid? ApartamentoId = null,
+    /// <summary>Número do apartamento (ex: "101").</summary>
+    string? NumeroApartamento = null,
+    /// <summary>Bloco do apartamento (ex: "A"). Nulo se não houver bloco.</summary>
+    string? BlocoApartamento = null
 );

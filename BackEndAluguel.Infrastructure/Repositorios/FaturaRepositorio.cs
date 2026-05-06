@@ -30,11 +30,22 @@ public class FaturaRepositorio : RepositorioBase<Fatura>, IFaturaRepositorio
             cancellationToken);
 
     /// <summary>
+    /// Busca uma fatura pelo ID, incluindo o Inquilino e o Apartamento para enriquecer o DTO.
+    /// </summary>
+    public override async Task<Fatura?> ObterPorIdAsync(Guid id, CancellationToken cancellationToken = default)
+        => await DbSet
+            .Include(f => f.Inquilino)
+                .ThenInclude(i => i!.Apartamento)
+            .FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
+
+    /// <summary>
     /// Retorna todas as faturas de um inquilino específico, ordenadas por mês.
     /// </summary>
     public async Task<IEnumerable<Fatura>> ObterPorInquilinoAsync(
         Guid inquilinoId, CancellationToken cancellationToken = default)
         => await DbSet.AsNoTracking()
+            .Include(f => f.Inquilino)
+                .ThenInclude(i => i!.Apartamento)
             .Where(f => f.InquilinoId == inquilinoId)
             .OrderByDescending(f => f.DataLimitePagamento)
             .ToListAsync(cancellationToken);

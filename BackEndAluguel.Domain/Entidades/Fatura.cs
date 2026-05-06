@@ -35,6 +35,11 @@ public class Fatura : EntidadeBase
     /// </summary>
     public decimal ValorLuz { get; private set; }
 
+    /// <summary>
+    /// Valor mensal cobrado pela vaga de garagem nesta fatura (0 se não possui garagem).
+    /// </summary>
+    public decimal ValorGaragem { get; private set; }
+
     /// <summary>Leitura do kWh no mes anterior (inicio do periodo).</summary>
     public decimal? KwMesAnterior { get; private set; }
 
@@ -116,6 +121,7 @@ public class Fatura : EntidadeBase
     /// <param name="kwAtual">Leitura do kWh no mês atual (opcional).</param>
     /// <param name="kwhValor">Valor do kWh vigente no momento da geração da fatura (opcional).</param>
     /// <param name="codigoPix">Código ou link PIX gerado para pagamento (opcional).</param>
+    /// <param name="valorGaragem">Valor da garagem neste mês (opcional, padrão 0).</param>
     public Fatura(
         string mesReferencia,
         decimal valorAluguel,
@@ -126,7 +132,8 @@ public class Fatura : EntidadeBase
         decimal? kwMesAnterior = null,
         decimal? kwAtual = null,
         decimal? kwhValor = null,
-        string? codigoPix = null)
+        string? codigoPix = null,
+        decimal valorGaragem = 0m)
     {
         ValidarMesReferencia(mesReferencia);
         if (valorAluguel <= 0)
@@ -135,11 +142,14 @@ public class Fatura : EntidadeBase
             throw new ArgumentException("O valor da agua nao pode ser negativo.", nameof(valorAgua));
         if (valorLuz < 0)
             throw new ArgumentException("O valor da luz nao pode ser negativo.", nameof(valorLuz));
+        if (valorGaragem < 0)
+            throw new ArgumentException("O valor da garagem nao pode ser negativo.", nameof(valorGaragem));
 
         MesReferencia = mesReferencia.Trim();
         ValorAluguel = valorAluguel;
         ValorAgua = valorAgua;
         ValorLuz = valorLuz;
+        ValorGaragem = valorGaragem;
         DataLimitePagamento = dataLimitePagamento;
         InquilinoId = inquilinoId;
         KwMesAnterior = kwMesAnterior;
@@ -150,10 +160,10 @@ public class Fatura : EntidadeBase
     }
 
     /// <summary>
-    /// Calcula o valor total da fatura somando aluguel, água e luz.
+    /// Calcula o valor total da fatura somando aluguel, água, luz e garagem.
     /// </summary>
     /// <returns>Soma de todos os valores cobrados na fatura.</returns>
-    public decimal CalcularValorTotal() => ValorAluguel + ValorAgua + ValorLuz;
+    public decimal CalcularValorTotal() => ValorAluguel + ValorAgua + ValorLuz + ValorGaragem;
 
     /// <summary>
     /// Registra o pagamento da fatura, atualizando a data de pagamento e o status para Pago.
