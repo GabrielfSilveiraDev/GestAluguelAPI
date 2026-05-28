@@ -22,6 +22,10 @@ builder.Services.AdicionarApplication();
 builder.Services.AdicionarInfrastructure(builder.Configuration);
 builder.Services.AddHostedService<VerificarFaturasVencidasServico>();
 
+// Modo local: estado de heartbeat (singleton) e monitor que encerra o processo quando o browser fecha
+builder.Services.AddSingleton<HeartbeatEstado>();
+builder.Services.AddHostedService<HeartbeatMonitorServico>();
+
 var jwtChave = builder.Configuration["Jwt:SecretKey"]
     ?? throw new InvalidOperationException("Jwt:SecretKey nao configurado no appsettings.json.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "GestAluguelAPI";

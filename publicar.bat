@@ -41,13 +41,13 @@ dotnet publish BackEndAluguel/BackEndAluguel.csproj ^
     -o "%OUTPUT_DIR%"
 if errorlevel 1 ( echo ERRO: dotnet publish falhou & pause & exit /b 1 )
 
-:: 5. Copiar iniciar.bat para a pasta de saida
-copy /y "%BACKEND_DIR%iniciar.bat" "%OUTPUT_DIR%\iniciar.bat"
+:: 5. Copiar iniciar.vbs para a pasta de saida
+copy /y "%BACKEND_DIR%iniciar.vbs" "%OUTPUT_DIR%\iniciar.vbs"
 
 echo.
 echo ============================================
 echo  PRONTO! Pasta gerada: dist-local\
 echo  Distribua a pasta dist-local\ para o usuario
-echo  O usuario deve executar: dist-local\iniciar.bat
+echo  O usuario deve executar: dist-local\iniciar.vbs
 echo ============================================
 pause
