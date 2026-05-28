@@ -5,7 +5,10 @@ using BackEndAluguel.Api.Background;
 using BackEndAluguel.Api.Middleware;
 using BackEndAluguel.Application;
 using BackEndAluguel.Infrastructure;
+using BackEndAluguel.Infrastructure.Contexto;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -15,17 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Registro de serviços — Clean Architecture
 // ===========================================================
 
-// Camada Application: registra todos os manipuladores CQRS (MediatR)
 builder.Services.AdicionarApplication();
-
-// Camada Infrastructure: registra DbContext (SQL Server), repositórios e serviços externos
 builder.Services.AdicionarInfrastructure(builder.Configuration);
-
-// Servico de background: verifica e atualiza faturas vencidas diariamente
 builder.Services.AddHostedService<VerificarFaturasVencidasServico>();
 
-// Autenticacao JWT — valida tokens emitidos pelo JwtServico
-// Configuracoes lidas de appsettings.json -> secao "Jwt"
 var jwtChave = builder.Configuration["Jwt:SecretKey"]
     ?? throw new InvalidOperationException("Jwt:SecretKey nao configurado no appsettings.json.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "GestAluguelAPI";
@@ -48,15 +44,10 @@ builder.Services
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtChave)),
-            ClockSkew = TimeSpan.Zero // Remove tolerancia de 5 min padrao
+            ClockSkew = TimeSpan.Zero
         };
     });
 
-// Controllers com serialização JSON configurada:
-// - camelCase nos campos (padrão REST/JavaScript)
-// - Enums serializados como string legível (ex: "Pendente" em vez de 1)
-// - DateOnly suportado nativamente
-// - Ciclos de referência ignorados (evita loop Inquilino ↔ Fatura)
 builder.Services.AddControllers()
     .AddJsonOptions(opcoes =>
     {
@@ -66,7 +57,6 @@ builder.Services.AddControllers()
         opcoes.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-// Swagger/OpenAPI — documentação interativa dos endpoints
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opcoes =>
 {
@@ -74,16 +64,13 @@ builder.Services.AddSwaggerGen(opcoes =>
     {
         Title = "GestAluguel API",
         Version = "v1",
-        Description = "API RESTful para gerenciamento de aluguéis residenciais. " +
-                      "Gerencie apartamentos, inquilinos e faturas mensais."
+        Description = "API RESTful para gerenciamento de aluguéis residenciais."
     });
 
-    // Inclui os comentários XML na documentação Swagger
     var xmlApi = Path.Combine(AppContext.BaseDirectory, "BackEndAluguel.xml");
     if (File.Exists(xmlApi))
         opcoes.IncludeXmlComments(xmlApi);
 
-    // Suporte a JWT Bearer no Swagger UI
     opcoes.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -99,19 +86,14 @@ builder.Services.AddSwaggerGen(opcoes =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
     });
 });
 
-// CORS — permite que o front-end React acesse a API
-// SUMMARY: Configures CORS to allow both local development and production frontend.
+// CORS permissivo para modo local (frontend servido pelo próprio backend)
 builder.Services.AddCors(opcoes =>
 {
     opcoes.AddPolicy("PermitirFrontEnd", politica =>
@@ -119,9 +101,7 @@ builder.Services.AddCors(opcoes =>
             .SetIsOriginAllowed(origin =>
             {
                 var uri = new Uri(origin);
-                return uri.Host == "localhost" ||
-                       uri.Host.EndsWith(".vercel.app") ||
-                       uri.Host == "gest-aluguel-front-end-9lin-kzioth3ed.vercel.app";
+                return uri.Host == "localhost" || uri.Host == "127.0.0.1";
             })
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -131,36 +111,44 @@ builder.Services.AddCors(opcoes =>
 var app = builder.Build();
 
 // ===========================================================
+// Migração automática do banco SQLite na inicialização
+// ===========================================================
+using (var escopo = app.Services.CreateScope())
+{
+    var db = escopo.ServiceProvider.GetRequiredService<AluguelDbContext>();
+    await db.Database.MigrateAsync();
+}
+
+// ===========================================================
 // Pipeline de requisições HTTP
 // ===========================================================
 
-// Deve ser o PRIMEIRO middleware — captura todas as exceções não tratadas
 app.UseTratamentoDeErros();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(opcoes =>
 {
-    // Swagger UI disponível apenas em desenvolvimento: https://localhost:7200/swagger
-    app.UseSwagger();
-    app.UseSwaggerUI(opcoes =>
-    {
-        opcoes.SwaggerEndpoint("/swagger/v1/swagger.json", "GestAluguel API v1");
-        opcoes.RoutePrefix = "swagger";
-        opcoes.DocumentTitle = "GestAluguel API";
-        opcoes.DisplayRequestDuration();
-    });
-}
+    opcoes.SwaggerEndpoint("/swagger/v1/swagger.json", "GestAluguel API v1");
+    opcoes.RoutePrefix = "swagger";
+    opcoes.DocumentTitle = "GestAluguel API";
+    opcoes.DisplayRequestDuration();
+});
 
-app.UseHttpsRedirection();
+// Serve arquivos estáticos do frontend (wwwroot/) e contratos
+var provedor = new FileExtensionContentTypeProvider();
+app.UseDefaultFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provedor,
+    ServeUnknownFileTypes = false
+});
 
-// Serve arquivos estaticos — necessario para download de contratos salvos em wwwroot
-app.UseStaticFiles();
-
-// CORS deve ser registrado antes de UseAuthorization e MapControllers
 app.UseCors("PermitirFrontEnd");
-
-// Autenticacao deve vir antes de Autorizacao
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Fallback SPA: rotas não-API retornam o index.html do frontend
+app.MapFallbackToFile("index.html");
 
 app.Run();

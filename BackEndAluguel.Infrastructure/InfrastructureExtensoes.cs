@@ -25,18 +25,11 @@ public static class InfrastructureExtensoes
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Registra o DbContext com SQL Server
+        // Registra o DbContext com SQLite (modo local, sem instalação de servidor)
         services.AddDbContext<AluguelDbContext>(opcoes =>
-            opcoes.UseSqlServer(
+            opcoes.UseSqlite(
                 configuration.GetConnectionString("AluguelDb"),
-                sql =>
-                {
-                    sql.MigrationsAssembly(typeof(AluguelDbContext).Assembly.FullName);
-                    sql.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(10),
-                        errorNumbersToAdd: null);
-                }));
+                sql => sql.MigrationsAssembly(typeof(AluguelDbContext).Assembly.FullName)));
 
         // Registra os repositorios — seguindo DIP (SOLID)
         services.AddScoped<IApartamentoRepositorio, ApartamentoRepositorio>();

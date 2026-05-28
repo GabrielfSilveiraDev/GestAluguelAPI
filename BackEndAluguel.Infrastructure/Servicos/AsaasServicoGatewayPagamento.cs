@@ -33,13 +33,20 @@ public class AsaasServicoGatewayPagamento : IServicoGatewayPagamento
     /// </summary>
     /// <param name="httpClientFactory">Fabrica de clientes HTTP (IHttpClientFactory).</param>
     /// <param name="logger">Logger para registro de operacoes e erros.</param>
+    private readonly IConfiguration _configuration;
+
     public AsaasServicoGatewayPagamento(
         IHttpClientFactory httpClientFactory,
-        ILogger<AsaasServicoGatewayPagamento> logger)
+        ILogger<AsaasServicoGatewayPagamento> logger,
+        IConfiguration configuration)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _configuration = configuration;
     }
+
+    private bool AsaasConfigurado()
+        => !string.IsNullOrWhiteSpace(_configuration["Asaas:ApiKey"]);
 
     /// <summary>
     /// Registra uma nova subconta no Asaas para um Host (locador).
@@ -55,6 +62,12 @@ public class AsaasServicoGatewayPagamento : IServicoGatewayPagamento
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Iniciando registro de subconta Asaas para: {Nome}", dados.Nome);
+
+        if (!AsaasConfigurado())
+        {
+            _logger.LogWarning("Asaas não configurado (modo local). Subconta não criada.");
+            return new SubcontaResultadoDto(string.Empty, string.Empty, dados.Nome, dados.Email, "LOCAL");
+        }
 
         var cliente = _httpClientFactory.CreateClient(NomeClienteHttp);
 
@@ -113,6 +126,12 @@ public class AsaasServicoGatewayPagamento : IServicoGatewayPagamento
     {
         _logger.LogInformation("Gerando cobranca PIX para fatura {FaturaId}. Valor: {Valor}",
             dados.FaturaId, dados.Valor);
+
+        if (!AsaasConfigurado())
+        {
+            _logger.LogWarning("Asaas não configurado (modo local). Cobrança PIX não gerada via Asaas.");
+            return new CobrancaPixResultadoDto(string.Empty, null, null, "LOCAL", dados.Valor);
+        }
 
         var cliente = _httpClientFactory.CreateClient(NomeClienteHttp);
 
