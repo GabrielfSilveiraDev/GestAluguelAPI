@@ -3,7 +3,6 @@ using System;
 using BackEndAluguel.Infrastructure.Contexto;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -16,47 +15,43 @@ namespace BackEndAluguel.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.4")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
-
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
 
             modelBuilder.Entity("BackEndAluguel.Domain.Entidades.Apartamento", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Id");
 
                     b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AtualizadoEm");
 
                     b.Property<string>("Bloco")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
+                        .HasColumnType("TEXT")
                         .HasDefaultValue("")
                         .HasColumnName("Bloco");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CriadoEm");
 
                     b.Property<Guid>("HostId")
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("TEXT")
                         .HasColumnName("HostId");
 
                     b.Property<string>("Numero")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Numero");
 
                     b.Property<bool>("Ocupado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(false)
                         .HasColumnName("Ocupado");
 
@@ -64,8 +59,7 @@ namespace BackEndAluguel.Infrastructure.Migrations
 
                     b.HasIndex("HostId", "Numero", "Bloco")
                         .IsUnique()
-                        .HasDatabaseName("IX_Apartamentos_HostId_Numero_Bloco")
-                        .HasFilter("[Bloco] IS NOT NULL");
+                        .HasDatabaseName("IX_Apartamentos_HostId_Numero_Bloco");
 
                     b.ToTable("Apartamentos", (string)null);
                 });
@@ -74,49 +68,49 @@ namespace BackEndAluguel.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ChavePix")
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CidadeRecebedorPix")
                         .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("HostId")
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("TEXT")
                         .HasColumnName("HostId");
 
                     b.Property<decimal>("KwhValor")
                         .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("MensagemPadraoWhatsapp")
                         .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NomeRecebedorPix")
                         .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NumeroWhatsappLocador")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("ValorAgua")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("WalletIdAsaas")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -131,38 +125,38 @@ namespace BackEndAluguel.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CaminhoArquivo")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Descricao")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("InquilinoId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NomeOriginalArquivo")
                         .IsRequired()
                         .HasMaxLength(260)
-                        .HasColumnType("nvarchar(260)");
+                        .HasColumnType("TEXT");
 
                     b.Property<long>("TamanhoBytes")
-                        .HasColumnType("bigint");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("TipoConteudo")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -176,44 +170,44 @@ namespace BackEndAluguel.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Cpf")
                         .IsRequired()
                         .HasMaxLength(11)
-                        .HasColumnType("nvarchar(11)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateOnly>("DataNascimento")
-                        .HasColumnType("date");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("EstadoCivil")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("InquilinoId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NomeCompleto")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("OrgaoEmissor")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Rg")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Telefone")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -230,90 +224,90 @@ namespace BackEndAluguel.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Id");
 
                     b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AtualizadoEm");
 
                     b.Property<string>("CobrancaAsaasId")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CobrancaAsaasId");
 
                     b.Property<string>("CodigoPix")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CodigoPix");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CriadoEm");
 
                     b.Property<DateOnly>("DataLimitePagamento")
-                        .HasColumnType("date")
+                        .HasColumnType("TEXT")
                         .HasColumnName("DataLimitePagamento");
 
                     b.Property<DateOnly?>("DataPagamento")
-                        .HasColumnType("date")
+                        .HasColumnType("TEXT")
                         .HasColumnName("DataPagamento");
 
                     b.Property<Guid>("HostId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("InquilinoId")
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("TEXT")
                         .HasColumnName("InquilinoId");
 
                     b.Property<decimal?>("KwAtual")
                         .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("KwAtual");
 
                     b.Property<decimal?>("KwMesAnterior")
                         .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("KwMesAnterior");
 
                     b.Property<decimal?>("KwhValor")
                         .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("KwhValor");
 
                     b.Property<string>("MesReferencia")
                         .IsRequired()
                         .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("MesReferencia");
 
                     b.Property<int>("Status")
-                        .HasColumnType("int")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("Status");
 
                     b.Property<decimal>("ValorAgua")
                         .ValueGeneratedOnAdd()
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("TEXT")
                         .HasDefaultValue(0m)
                         .HasColumnName("ValorAgua");
 
                     b.Property<decimal>("ValorAluguel")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ValorAluguel");
 
                     b.Property<decimal>("ValorGaragem")
                         .ValueGeneratedOnAdd()
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("TEXT")
                         .HasDefaultValue(0m)
                         .HasColumnName("ValorGaragem");
 
                     b.Property<decimal>("ValorLuz")
                         .ValueGeneratedOnAdd()
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("TEXT")
                         .HasDefaultValue(0m)
                         .HasColumnName("ValorLuz");
 
@@ -330,32 +324,32 @@ namespace BackEndAluguel.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("ApartamentoId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateOnly>("Data")
-                        .HasColumnType("date");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Observacao")
                         .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Valor")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -368,49 +362,49 @@ namespace BackEndAluguel.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Cpf")
                         .IsRequired()
                         .HasMaxLength(11)
-                        .HasColumnType("nchar(11)")
+                        .HasColumnType("TEXT")
                         .IsFixedLength();
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateOnly>("DataNascimento")
-                        .HasColumnType("date");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("EmailConfirmado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
 
                     b.Property<string>("NomeCompleto")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("SenhaHash")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TokenConfirmacao")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("TokenExpiracaoConfirmacao")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -431,89 +425,89 @@ namespace BackEndAluguel.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Id");
 
                     b.Property<Guid>("ApartamentoId")
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ApartamentoId");
 
                     b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AtualizadoEm");
 
                     b.Property<string>("Cpf")
                         .IsRequired()
                         .HasMaxLength(11)
-                        .HasColumnType("nvarchar(11)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Cpf");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CriadoEm");
 
                     b.Property<DateOnly>("DataEntrada")
-                        .HasColumnType("date")
+                        .HasColumnType("TEXT")
                         .HasColumnName("DataEntrada");
 
                     b.Property<DateOnly>("DataNascimento")
-                        .HasColumnType("date")
+                        .HasColumnType("TEXT")
                         .HasColumnName("DataNascimento");
 
                     b.Property<DateOnly>("DataVencimentoContrato")
-                        .HasColumnType("date")
+                        .HasColumnType("TEXT")
                         .HasColumnName("DataVencimentoContrato");
 
                     b.Property<string>("DiasAlertaVencimento")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("DiasAlertaVencimento");
 
                     b.Property<int>("EstadoCivil")
-                        .HasColumnType("int")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("EstadoCivil");
 
                     b.Property<decimal>("Garagem")
                         .ValueGeneratedOnAdd()
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("TEXT")
                         .HasDefaultValue(0m)
                         .HasColumnName("Garagem");
 
                     b.Property<Guid>("HostId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NomeCompleto")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("NomeCompleto");
 
                     b.Property<string>("OrgaoEmissor")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("OrgaoEmissor");
 
                     b.Property<int>("QuantidadeMoradores")
-                        .HasColumnType("int")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("QuantidadeMoradores");
 
                     b.Property<string>("Rg")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Rg");
 
                     b.Property<string>("Telefone")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Telefone");
 
                     b.Property<decimal>("ValorAluguel")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ValorAluguel");
 
                     b.HasKey("Id");

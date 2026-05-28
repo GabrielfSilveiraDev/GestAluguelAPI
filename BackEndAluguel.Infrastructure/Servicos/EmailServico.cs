@@ -46,15 +46,21 @@ public class EmailServico : IEmailServico
 
     private async Task EnviarAsync(string destinatario, string assunto, string corpo, CancellationToken cancellationToken)
     {
-        var host = _configuracao["Email:Smtp:Host"] ?? throw new InvalidOperationException("Email:Smtp:Host não configurado.");
+        var smtpHost = _configuracao["Email:Smtp:Host"];
+        if (string.IsNullOrWhiteSpace(smtpHost))
+        {
+            _logger.LogInformation("SMTP não configurado. E-mail para {Destinatario} não enviado (modo local).", destinatario);
+            return;
+        }
+
         var porta = int.TryParse(_configuracao["Email:Smtp:Porta"], out var p) ? p : 587;
-        var usuario = _configuracao["Email:Smtp:Usuario"] ?? throw new InvalidOperationException("Email:Smtp:Usuario não configurado.");
-        var senha = _configuracao["Email:Smtp:Senha"] ?? throw new InvalidOperationException("Email:Smtp:Senha não configurada.");
+        var usuario = _configuracao["Email:Smtp:Usuario"] ?? string.Empty;
+        var senha = _configuracao["Email:Smtp:Senha"] ?? string.Empty;
         var remetente = _configuracao["Email:Remetente"] ?? usuario;
         var nomeRemetente = _configuracao["Email:NomeRemetente"] ?? "GestAluguel";
         var ssl = bool.TryParse(_configuracao["Email:Smtp:UsarSsl"], out var s) && s;
 
-        using var client = new SmtpClient(host, porta)
+        using var client = new SmtpClient(smtpHost, porta)
         {
             Credentials = new NetworkCredential(usuario, senha),
             EnableSsl = ssl,

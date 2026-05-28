@@ -55,16 +55,13 @@ public class RegistrarHostManipulador : IRequestHandler<RegistrarHostComando, Ho
 {
     private readonly IHostRepositorio _hostRepositorio;
     private readonly ISenhaServico _senhaServico;
-    private readonly IEmailServico _emailServico;
 
     public RegistrarHostManipulador(
         IHostRepositorio hostRepositorio,
-        ISenhaServico senhaServico,
-        IEmailServico emailServico)
+        ISenhaServico senhaServico)
     {
         _hostRepositorio = hostRepositorio;
         _senhaServico = senhaServico;
-        _emailServico = emailServico;
     }
 
     /// <summary>
@@ -87,24 +84,13 @@ public class RegistrarHostManipulador : IRequestHandler<RegistrarHostComando, Ho
         if (string.IsNullOrWhiteSpace(request.Senha) || request.Senha.Length < 6)
             throw new RegraDeNegocioExcecao("A senha deve ter no mínimo 6 caracteres.");
 
-        // Cria o host com senha criptografada
+        // Cria o host com senha criptografada e já confirma o email (modo local, sem SMTP)
         var senhaHash = _senhaServico.HashearSenha(request.Senha);
         var host = new Host(request.NomeCompleto, cpfLimpo, request.DataNascimento, emailLimpo, senhaHash);
+        host.ConfirmarEmail();
 
         await _hostRepositorio.AdicionarAsync(host, cancellationToken);
         await _hostRepositorio.SalvarAlteracoesAsync(cancellationToken);
-
-        // Envia e-mail de confirmação (não bloqueia o registro em caso de falha de envio)
-        try
-        {
-            await _emailServico.EnviarConfirmacaoContaAsync(
-                host.Email, host.NomeCompleto, host.TokenConfirmacao!, cancellationToken);
-        }
-        catch
-        {
-            // Falha no envio de e-mail não deve impedir o registro
-            // O usuário pode solicitar reenvio futuramente
-        }
 
         return ConverterParaDto(host);
     }

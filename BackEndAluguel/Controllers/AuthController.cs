@@ -39,7 +39,7 @@ public class AuthController : ControllerBase
             cancellationToken);
 
         return StatusCode(StatusCodes.Status201Created,
-            RespostaApi<HostDto>.Ok(resultado, "Conta criada! Verifique seu e-mail para confirmar o cadastro."));
+            RespostaApi<HostDto>.Ok(resultado, "Conta criada com sucesso! Você já pode fazer login."));
     }
 
     /// <summary>
